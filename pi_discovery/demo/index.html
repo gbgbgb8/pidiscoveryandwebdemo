@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi Control Center</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23c51a4a' width='100' height='100' rx='20'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>π</text></svg>">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fab fa-raspberry-pi"></i> Pi Control Center</h1>
+            <div class="status-bar">
+                <span id="connection-status" class="status connected">
+                    <i class="fas fa-circle"></i> Connected
+                </span>
+                <span id="hostname">Loading...</span>
+            </div>
+        </header>
+
+        <div class="dashboard">
+            <!-- System Stats -->
+            <section class="card stats-card">
+                <h2><i class="fas fa-microchip"></i> System Stats</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon"><i class="fas fa-thermometer-half"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="cpu-temp">--</span>
+                            <span class="stat-label">CPU Temp</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon"><i class="fas fa-memory"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="ram-usage">--</span>
+                            <span class="stat-label">RAM</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon"><i class="fas fa-hdd"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="disk-usage">--</span>
+                            <span class="stat-label">Disk</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon"><i class="fas fa-battery-three-quarters"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="battery-level">--</span>
+                            <span class="stat-label">Battery</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="refresh-row">
+                    <small>Updated: <span id="stats-time">--</span></small>
+                    <button onclick="refreshStats()" class="btn-small"><i class="fas fa-sync"></i></button>
+                </div>
+            </section>
+
+            <!-- Camera -->
+            <section class="card camera-card">
+                <h2><i class="fas fa-camera"></i> Camera</h2>
+                <div class="camera-container">
+                    <div id="camera-placeholder" class="camera-placeholder">
+                        <i class="fas fa-video-slash"></i>
+                        <p>Camera stream stopped</p>
+                    </div>
+                    <img id="camera-stream" src="" alt="Camera Stream" style="display:none;">
+                </div>
+                <div class="camera-controls">
+                    <button id="btn-stream-toggle" onclick="toggleStream()" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Start Stream
+                    </button>
+                    <button onclick="takePhoto()" class="btn btn-secondary">
+                        <i class="fas fa-camera"></i> Photo
+                    </button>
+                </div>
+                <div id="photo-result" class="photo-result"></div>
+                
+                <div class="timelapse-section">
+                    <h3><i class="fas fa-clock"></i> Timelapse</h3>
+                    <div class="timelapse-controls">
+                        <select id="timelapse-interval" class="select-input">
+                            <option value="10">Every 10s</option>
+                            <option value="30">Every 30s</option>
+                            <option value="60" selected>Every 1min</option>
+                            <option value="300">Every 5min</option>
+                            <option value="600">Every 10min</option>
+                        </select>
+                        <select id="timelapse-duration" class="select-input">
+                            <option value="600">10 minutes</option>
+                            <option value="3600" selected>1 hour</option>
+                            <option value="21600">6 hours</option>
+                            <option value="86400">24 hours</option>
+                            <option value="0">Unlimited</option>
+                        </select>
+                        <button id="btn-timelapse" onclick="toggleTimelapse()" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Start
+                        </button>
+                    </div>
+                    <div class="timelapse-status">
+                        <span id="timelapse-status">Stopped</span>
+                        <span id="timelapse-count">0 images</span>
+                    </div>
+                    <div class="timelapse-gallery" id="timelapse-gallery"></div>
+                    <div class="timelapse-actions">
+                        <button onclick="refreshTimelapse()" class="btn btn-small">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                        <button onclick="clearTimelapse()" class="btn btn-small btn-danger">
+                            <i class="fas fa-trash"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Audio Controls -->
+            <section class="card audio-card">
+                <h2><i class="fas fa-volume-up"></i> Audio</h2>
+                
+                <div class="audio-section">
+                    <h3><i class="fas fa-microphone"></i> Microphone</h3>
+                    <div class="audio-controls">
+                        <button id="btn-record" onclick="toggleRecording()" class="btn btn-primary">
+                            <i class="fas fa-circle"></i> Record
+                        </button>
+                        <select id="record-duration" class="select-input">
+                            <option value="3">3 sec</option>
+                            <option value="5" selected>5 sec</option>
+                            <option value="10">10 sec</option>
+                        </select>
+                    </div>
+                    <div id="recording-status" class="status-text"></div>
+                    <audio id="recorded-audio" controls style="display:none; width:100%; margin-top:10px;"></audio>
+                </div>
+
+                <div class="audio-section">
+                    <h3><i class="fas fa-bullhorn"></i> Text to Speech</h3>
+                    <div class="tts-controls">
+                        <input type="text" id="tts-text" placeholder="Enter text to speak..." class="text-input">
+                        <button onclick="speak()" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Speak
+                        </button>
+                    </div>
+                </div>
+
+                <div class="audio-section">
+                    <h3><i class="fas fa-music"></i> Sound Effects</h3>
+                    <div class="sound-buttons">
+                        <button onclick="playSound('beep')" class="btn btn-small">Beep</button>
+                        <button onclick="playSound('chime')" class="btn btn-small">Chime</button>
+                        <button onclick="playSound('alert')" class="btn btn-small">Alert</button>
+                    </div>
+                </div>
+
+                <div class="audio-section">
+                    <h3><i class="fas fa-sliders-h"></i> Volume</h3>
+                    <div class="volume-control">
+                        <i class="fas fa-volume-down"></i>
+                        <input type="range" id="volume-slider" min="0" max="100" value="50" onchange="setVolume(this.value)">
+                        <i class="fas fa-volume-up"></i>
+                        <span id="volume-value">50%</span>
+                    </div>
+                </div>
+
+                <div class="audio-section">
+                    <h3><i class="fas fa-wave-square"></i> Visualizer</h3>
+                    <div class="visualizer-controls">
+                        <button id="btn-visualizer" onclick="toggleVisualizer()" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Start
+                        </button>
+                        <span id="visualizer-level">Level: --</span>
+                    </div>
+                    <div class="visualizer-bar-container">
+                        <div class="visualizer-bar" id="visualizer-bar"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GPIO Controls -->
+            <section class="card gpio-card">
+                <h2><i class="fas fa-plug"></i> GPIO</h2>
+                <p class="card-description">Control GPIO pins (simulated LEDs)</p>
+                
+                <div class="gpio-grid">
+                    <div class="gpio-pin" data-pin="17">
+                        <div class="led" id="led-17"></div>
+                        <span>GPIO 17</span>
+                        <button onclick="toggleGPIO(17)" class="btn btn-small">Toggle</button>
+                    </div>
+                    <div class="gpio-pin" data-pin="27">
+                        <div class="led" id="led-27"></div>
+                        <span>GPIO 27</span>
+                        <button onclick="toggleGPIO(27)" class="btn btn-small">Toggle</button>
+                    </div>
+                    <div class="gpio-pin" data-pin="22">
+                        <div class="led" id="led-22"></div>
+                        <span>GPIO 22</span>
+                        <button onclick="toggleGPIO(22)" class="btn btn-small">Toggle</button>
+                    </div>
+                    <div class="gpio-pin" data-pin="23">
+                        <div class="led" id="led-23"></div>
+                        <span>GPIO 23</span>
+                        <button onclick="toggleGPIO(23)" class="btn btn-small">Toggle</button>
+                    </div>
+                </div>
+
+                <div class="gpio-actions">
+                    <button onclick="blinkAll()" class="btn btn-secondary">
+                        <i class="fas fa-lightbulb"></i> Blink All
+                    </button>
+                    <button onclick="allOff()" class="btn btn-secondary">
+                        <i class="fas fa-power-off"></i> All Off
+                    </button>
+                </div>
+            </section>
+
+            <!-- System Controls -->
+            <section class="card system-card">
+                <h2><i class="fas fa-cogs"></i> System</h2>
+                
+                <div class="system-info">
+                    <div class="info-row">
+                        <span>Model:</span>
+                        <span id="pi-model">Loading...</span>
+                    </div>
+                    <div class="info-row">
+                        <span>OS:</span>
+                        <span id="pi-os">Loading...</span>
+                    </div>
+                    <div class="info-row">
+                        <span>IP Address:</span>
+                        <span id="pi-ip">Loading...</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Uptime:</span>
+                        <span id="pi-uptime">Loading...</span>
+                    </div>
+                </div>
+
+                <div class="system-actions">
+                    <button onclick="runDiscovery()" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Run Discovery
+                    </button>
+                    <button onclick="openDashboard()" class="btn btn-secondary">
+                        <i class="fas fa-chart-bar"></i> View Dashboard
+                    </button>
+                </div>
+
+                <div class="power-actions">
+                    <h3><i class="fas fa-power-off"></i> Power</h3>
+                    <div class="power-buttons">
+                        <button onclick="confirmPower('reboot')" class="btn btn-warning">
+                            <i class="fas fa-redo"></i> Reboot
+                        </button>
+                        <button onclick="confirmPower('shutdown')" class="btn btn-danger">
+                            <i class="fas fa-power-off"></i> Shutdown
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings -->
+            <section class="card settings-card">
+                <h2><i class="fas fa-sliders-h"></i> Settings</h2>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Startup Announcement</span>
+                        <span class="setting-desc">Speak IP address when server starts</span>
+                    </div>
+                    <div class="setting-controls">
+                        <button onclick="playAnnouncement()" class="btn btn-small" title="Play now">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <label class="toggle">
+                            <input type="checkbox" id="toggle-announcement" onchange="toggleSetting('announcement_enabled', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Start on Boot</span>
+                        <span class="setting-desc">Auto-start Control Center when Pi boots</span>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-autostart" onchange="toggleSetting('autostart_enabled', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Terminal -->
+            <section class="card terminal-card">
+                <h2><i class="fas fa-terminal"></i> Terminal</h2>
+                <div class="terminal-output" id="terminal-output">
+                    <div class="terminal-line">Welcome to Pi Control Center</div>
+                    <div class="terminal-line">Type a command below...</div>
+                </div>
+                <div class="terminal-input">
+                    <span class="prompt">pi@pi:~$</span>
+                    <input type="text" id="terminal-command" placeholder="Enter command..." onkeypress="handleTerminalKey(event)">
+                    <button onclick="runCommand()" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- File Browser -->
+            <section class="card files-card">
+                <h2><i class="fas fa-folder"></i> File Browser</h2>
+                
+                <div class="files-breadcrumb" id="files-breadcrumb">
+                    <span class="breadcrumb-item" onclick="navigateTo('/')">/</span>
+                </div>
+                
+                <div class="files-toolbar">
+                    <button onclick="navigateUp()" class="btn btn-small" title="Go up">
+                        <i class="fas fa-level-up-alt"></i>
+                    </button>
+                    <button onclick="refreshFiles()" class="btn btn-small" title="Refresh">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                    <button onclick="showNewFolderDialog()" class="btn btn-small" title="New folder">
+                        <i class="fas fa-folder-plus"></i>
+                    </button>
+                    <label class="btn btn-small upload-btn" title="Upload file">
+                        <i class="fas fa-upload"></i>
+                        <input type="file" id="file-upload" onchange="uploadFile(this)" hidden>
+                    </label>
+                </div>
+                
+                <div class="files-list" id="files-list">
+                    <div class="file-item loading">Loading...</div>
+                </div>
+                
+                <div class="files-preview" id="files-preview" style="display:none;">
+                    <div class="preview-header">
+                        <span id="preview-filename">file.txt</span>
+                        <button onclick="closePreview()" class="btn btn-small"><i class="fas fa-times"></i></button>
+                    </div>
+                    <pre id="preview-content"></pre>
+                </div>
+            </section>
+
+            <!-- Log Viewer -->
+            <section class="card logs-card">
+                <h2><i class="fas fa-file-alt"></i> Log Viewer</h2>
+                
+                <div class="logs-controls">
+                    <select id="log-source" class="select-input" onchange="loadLogs()">
+                        <option value="syslog">System Log</option>
+                        <option value="dmesg">Kernel (dmesg)</option>
+                        <option value="auth">SSH/Auth</option>
+                        <option value="pi-control-center">Control Center</option>
+                        <option value="kernel">Kernel Journal</option>
+                    </select>
+                    <select id="log-lines" class="select-input" onchange="loadLogs()">
+                        <option value="50">50 lines</option>
+                        <option value="100" selected>100 lines</option>
+                        <option value="250">250 lines</option>
+                        <option value="500">500 lines</option>
+                    </select>
+                    <button onclick="loadLogs()" class="btn btn-small">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                    <label class="toggle-inline">
+                        <input type="checkbox" id="log-auto-refresh" onchange="toggleLogAutoRefresh()">
+                        <span>Auto</span>
+                    </label>
+                </div>
+                
+                <div class="logs-filter">
+                    <input type="text" id="log-filter" placeholder="Filter logs..." class="text-input" oninput="filterLogs()">
+                </div>
+                
+                <div class="logs-output" id="logs-output">
+                    <div class="log-line">Select a log source and click refresh...</div>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p>Pi Control Center <span id="version">v1.0.0</span> | <a href="/api/discovery" target="_blank">API</a> | <a href="/dashboard" target="_blank">Full Dashboard</a></p>
+        </footer>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="modal-overlay" class="modal-overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3 id="modal-title">Confirm Action</h3>
+            </div>
+            <p id="modal-message">Are you sure?</p>
+            <div class="modal-buttons">
+                <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+                <button id="modal-confirm" class="btn btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toast-container"></div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
