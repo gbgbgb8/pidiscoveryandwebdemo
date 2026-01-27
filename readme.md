@@ -4,6 +4,14 @@
 
 A comprehensive Python-based tool that discovers and documents everything about a Raspberry Pi's hardware, software, network, and peripherals. Outputs structured JSON and a beautiful HTML dashboard.
 
+
+<img src="https://github.com/gbgbgb8/pidiscoveryandwebdemo/blob/main/screenshot1.jpg?raw=true">
+
+<img src="https://github.com/gbgbgb8/pidiscoveryandwebdemo/blob/main/screenshot2.jpg?raw=true">
+
+<img src="https://github.com/gbgbgb8/pidiscoveryandwebdemo/blob/main/screenshot3.jpg?raw=true">
+
+
 ---
 
 ## Table of Contents
