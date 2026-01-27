@@ -30,7 +30,7 @@ A comprehensive Python-based tool that discovers and documents everything about 
 - [AI Agent Recreation Spec](#ai-agent-recreation-spec)
 
 ---
-
+Use Raspberry Pi Imager to write the LITE os to an SD card, and use that to configure Wi-Fi and SSH credentials, then once it's online, do this:  https://github.com/gbgbgb8/pidiscoveryandwebdemo/blob/main/pi_discovery_setup.md
 ## For Users
 
 ### Quick Start
