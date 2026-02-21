@@ -3,7 +3,9 @@ scp -v ./pi_discovery_v1.0.0_dist.zip pi@newpi.local:
 
 # 2. SSH to new Pi and extract
 ssh pi@newpi.local
+
 unzip pi_discovery_v1.0.0_dist.zip
+
 cd pi_discovery
 
 # 3. Install dependencies
