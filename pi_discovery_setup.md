@@ -10,6 +10,7 @@ cd pi_discovery
 
 # 3. Install dependencies
 sudo apt update
+
 sudo apt install -y python3-psutil python3-flask espeak-ng alsa-utils rpicam-apps i2c-tools
 
 # 4. Make scripts executable
