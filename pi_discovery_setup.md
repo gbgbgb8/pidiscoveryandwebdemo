@@ -1,5 +1,5 @@
 # 1. Copy zip to new Pi
-scp ~/Desktop/pi_discovery_v1.0.0_dist.zip pi@newpi.local:~/
+scp -v ./pi_discovery_v1.0.0_dist.zip pi@newpi.local:
 
 # 2. SSH to new Pi and extract
 ssh pi@newpi.local
